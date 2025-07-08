@@ -28,11 +28,21 @@ async function downloadImage(url, filename) {
 
 // Get all original image links from Weibo album
 function getWeiboAlbumOriginalImages() {
-  const imgNodes = Array.from(document.querySelectorAll('img'));
-  const links = imgNodes
-    .map(img => img.src)
-    .filter(src => src && (/large\//.test(src) || /\/orj360\//.test(src) || /\/orj480\//.test(src) || /\/orj960\//.test(src) || /\/orj1920\//.test(src)))
-    .map(src => src.replace(/thumb150|thumb180|thumb300|mw690|orj360|orj480|orj960|orj1920|bmiddle|small/g, 'large'));
+  // Find all divs containing ProfileAlbum_box class
+  const albumBoxes = document.querySelectorAll('div[class*="ProfileAlbum_box"]');
+  const links = [];
+
+  albumBoxes.forEach(box => {
+    // Find img with woo-picture-img class within each box
+    const imgs = box.querySelectorAll('img.woo-picture-img');
+    imgs.forEach(img => {
+      if (img.src && (/large\//.test(img.src) || /\/orj360\//.test(img.src) || /\/orj480\//.test(img.src) || /\/orj960\//.test(img.src) || /\/orj1920\//.test(img.src))) {
+        const originalUrl = img.src.replace(/thumb150|thumb180|thumb300|mw690|orj360|orj480|orj960|orj1920|bmiddle|small/g, 'large');
+        links.push(originalUrl);
+      }
+    });
+  });
+
   return Array.from(new Set(links));
 }
 
