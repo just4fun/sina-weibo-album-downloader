@@ -26,15 +26,67 @@ function getWeiboAlbumOriginalImages() {
   return Array.from(new Set(links));
 }
 
+// Auto scroll to bottom and fetch all image links
+async function autoScrollAndFetchAllLinks() {
+  return new Promise((resolve) => {
+    let lastImgCount = 0;
+    let lastScrollHeight = 0;
+    let stableCount = 0;
+    const maxStable = 5; // how many times to check for no new images/height before stopping
+    const interval = 2000; // ms
+
+    function getImgCount() {
+      return document.querySelectorAll('img').length;
+    }
+    function getScrollHeight() {
+      return document.body.scrollHeight;
+    }
+
+    function sendProgress(count) {
+      chrome.runtime.sendMessage({ action: 'scroll_progress', count });
+    }
+
+    function scrollAndCheck() {
+      window.scrollTo(0, document.body.scrollHeight);
+      const curImgCount = getImgCount();
+      const curScrollHeight = getScrollHeight();
+      sendProgress(curImgCount);
+      if (curImgCount === lastImgCount && curScrollHeight === lastScrollHeight) {
+        stableCount++;
+      } else {
+        stableCount = 0;
+      }
+      lastImgCount = curImgCount;
+      lastScrollHeight = curScrollHeight;
+      if (stableCount >= maxStable) {
+        // Considered loaded
+        const links = getWeiboAlbumOriginalImages();
+        resolve(links);
+      } else {
+        setTimeout(scrollAndCheck, interval);
+      }
+    }
+    scrollAndCheck();
+  });
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'fetch_image_links') {
     const links = getWeiboAlbumOriginalImages();
     sendResponse({ links });
   }
+  if (message.action === 'auto_scroll_and_fetch') {
+    autoScrollAndFetchAllLinks().then(links => {
+      sendResponse({ links });
+    });
+    return true;
+  }
   if (message.action === 'batch_download_blob' && Array.isArray(message.links)) {
     (async () => {
       for (let i = 0; i < message.links.length; i++) {
-        await downloadImage(message.links[i], `weibo_album/${i + 1}.jpg`);
+        const url = message.links[i];
+        const filename = url.split('/').pop().split('?')[0];
+        await downloadImage(url, `weibo_album/${filename}`);
       }
     })();
     sendResponse({ ok: true });
