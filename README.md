@@ -1,7 +1,7 @@
 # Sina Weibo Album Downloader (Chrome Extension)
 
 <p align="center">
-  <img src="icon128.png" alt="Sina Weibo Album Downloader Icon" width="128" height="128">
+  <img src="icon300.png" alt="Sina Weibo Album Downloader Icon">
 </p>
 
 ## Motivation
@@ -16,7 +16,7 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
   Go to `chrome://settings/downloads` and turn off “Ask where to save each file before downloading.”
 
     <p align="center">
-     <img src="downloads_settings.png" alt="Downloads Settings" width="350" />
+     <img src="downloads_settings.png" alt="Downloads Settings" width="500" />
    </p>
 
 - **Why?**
@@ -28,14 +28,14 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
    - The browser will automatically scroll down the Weibo album page until it reaches the bottom, ensuring all image links are loaded and collected.
 
    <p align="center">
-     <img src="fetch_original_image_links.png" alt="Batch Fetch Original Image Links" width="350" />
+     <img src="fetch_original_image_links.png" alt="Batch Fetch Original Image Links" />
    </p>
 
 2. **Click “批量下载” (Batch Download):**
    - You can now close the popup. The images will continue downloading in the background as long as your browser remains open.
 
    <p align="center">
-     <img src="batch_download.png" alt="Batch Download" width="350" />
+     <img src="batch_download.png" alt="Batch Download" />
    </p>
 
 3. **Check Your Download Folder:**
