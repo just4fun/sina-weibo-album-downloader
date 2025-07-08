@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const fetchBtn = document.getElementById('fetch-btn');
   const downloadBtn = document.getElementById('download-btn');
   const imgLinksUl = document.getElementById('img-links');
+  const startIndexInput = document.getElementById('start-index');
   // Place fetchStatusSpan above the image list
   let fetchStatusSpan = document.getElementById('fetch-status');
   if (!fetchStatusSpan) {
@@ -56,10 +57,12 @@ document.addEventListener('DOMContentLoaded', function () {
   // Batch download: let content.js handle blob fetching and downloading
   downloadBtn.addEventListener('click', async () => {
     if (links.length > 0) {
-      // Do not disable the button here, since downloads are handled in the background
+      let startIndex = parseInt(startIndexInput.value, 10);
+      if (isNaN(startIndex) || startIndex < 1) startIndex = 1;
+      const slicedLinks = links.slice(startIndex - 1);
       downloadStatusDiv.textContent = '图片下载正在后台进行，请在 chrome://settings/downloads 设置的文件夹中查看。';
       chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: 'batch_download_blob', links });
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'batch_download_blob', links: slicedLinks });
       });
     }
   });

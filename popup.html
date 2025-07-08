@@ -17,7 +17,12 @@
   <div class="link-list">
     <ul id="img-links"></ul>
   </div>
-  <button id="download-btn" disabled>批量下载</button>
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <label for="start-index" style="font-size: 13px;">从第</label>
+    <input id="start-index" type="number" min="1" value="1" style="width: 50px; font-size: 13px;" />
+    <label for="start-index" style="font-size: 13px;">张开始</label>
+    <button id="download-btn" disabled>批量下载</button>
+  </div>
   <script src="popup.js"></script>
 </body>
 </html> 
