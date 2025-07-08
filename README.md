@@ -4,6 +4,8 @@
   <img src="icon300.png" alt="Sina Weibo Album Downloader Icon">
 </p>
 
+[简体中文版 README 在此 (README.zh-CN.md)](./README.zh-CN.md)
+
 ## Motivation
 
 This extension was created to help me back up nearly 4,000 photos I uploaded to Weibo over 15 years (2011–2025). If you also want to archive your Weibo memories, this tool is for you.
