@@ -1,8 +1,18 @@
 // Fetch image as blob with credentials (to bypass 403)
 async function fetchImageAsBlob(url) {
-  const response = await fetch(url, { credentials: 'include' });
-  if (!response.ok) throw new Error('Failed to fetch image: ' + url);
-  return await response.blob();
+  try {
+    const response = await fetch(url, { credentials: 'include' });
+    if (!response.ok) throw new Error('Failed to fetch image: ' + url);
+    return await response.blob();
+  } catch (e) {
+    // If CORS fails, try with no-cors mode
+    console.log('CORS failed, trying no-cors mode for:', url);
+    const response = await fetch(url, {
+      credentials: 'include',
+      mode: 'no-cors'
+    });
+    return await response.blob();
+  }
 }
 
 // Download image by sending blob URL to background.js
@@ -43,7 +53,9 @@ async function autoScrollAndFetchAllLinks() {
     }
 
     function sendProgress(count) {
-      chrome.runtime.sendMessage({ action: 'scroll_progress', count });
+      // Report original image links count instead of total image count
+      const originalLinks = getWeiboAlbumOriginalImages();
+      chrome.runtime.sendMessage({ action: 'scroll_progress', count: originalLinks.length });
     }
 
     function scrollAndCheck() {
@@ -82,9 +94,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   if (message.action === 'batch_download_blob' && Array.isArray(message.links)) {
+    console.log('Debug: content.js received', message.links.length, 'links to download');
     (async () => {
       for (let i = 0; i < message.links.length; i++) {
         const url = message.links[i];
+        console.log('Debug: downloading', i + 1, 'of', message.links.length, ':', url);
         const filename = url.split('/').pop().split('?')[0];
         await downloadImage(url, `weibo_album/${filename}`);
       }

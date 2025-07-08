@@ -17,11 +17,14 @@
   <div class="link-list">
     <ul id="img-links"></ul>
   </div>
-  <div style="display: flex; align-items: center; gap: 8px;">
-    <label for="start-index" style="font-size: 13px;">从第</label>
-    <input id="start-index" type="number" min="1" value="1" style="width: 50px; font-size: 13px;" />
-    <label for="start-index" style="font-size: 13px;">张开始</label>
-    <button id="download-btn" disabled>批量下载</button>
+  <div class="download-container">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <label for="start-index" style="font-size: 13px;">从第</label>
+      <input id="start-index" type="number" min="1" value="1" style="width: 50px; font-size: 13px;" />
+      <label for="start-index" style="font-size: 13px;">张开始</label>
+      <button id="download-btn" disabled>批量下载</button>
+    </div>
+    <div id="download-status" style="margin-top: 5px; font-size: 12px; color: #666;"></div>
   </div>
   <script src="popup.js"></script>
 </body>
