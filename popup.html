@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>微博相册原图下载</title>
+  <style>
+    body { font-family: Arial, sans-serif; width: 350px; margin: 10px; }
+    button { margin: 5px 0; }
+    ul { max-height: 200px; overflow-y: auto; padding: 0; }
+    li { word-break: break-all; font-size: 12px; margin-bottom: 4px; }
+    .link-list { margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h2>微博相册原图下载</h2>
+  <button id="fetch-btn">抓取原图链接</button>
+  <div class="link-list">
+    <ul id="img-links"></ul>
+  </div>
+  <button id="download-btn" disabled>批量下载</button>
+  <script src="popup.js"></script>
+</body>
+</html> 
