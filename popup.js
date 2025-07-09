@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
     startGroupSelect.disabled = true;
     startGroupSelect.innerHTML = '';
     downloadStatusDiv.textContent = '';
+    document.getElementById('reward-section').style.display = 'none';
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'auto_scroll_and_fetch' }, function (response) {
         fetchBtn.disabled = false;
@@ -92,7 +93,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const totalDownloadImages = filteredGroups.reduce((sum, group) => sum + group.images.length, 0);
       const totalImages = groupedImages.reduce((sum, group) => sum + group.images.length, 0);
-      downloadStatusDiv.innerHTML = `图片下载正在后台进行，将从第 ${selectedGroupIndex + 1} 个分组开始下载，共 ${totalDownloadImages} 张图片。<br><br>请在 chrome://settings/downloads 设置的文件夹中查看。`;
+      const startGroup = groupedImages[selectedGroupIndex];
+      const startGroupName = `${startGroup.year}-${startGroup.month}`;
+      downloadStatusDiv.innerHTML = `图片正在后台进行下载，将从分组 ${startGroupName} 开始下载，共 ${totalDownloadImages} 张图片。<br><br>请在 chrome://settings/downloads 设置的文件夹中查看。`;
+
+      // Show reward section
+      const rewardSection = document.getElementById('reward-section');
+      rewardSection.style.display = 'block';
 
       chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         chrome.tabs.sendMessage(tabs[0].id, { action: 'batch_download_grouped', groupedImages: filteredGroups });
