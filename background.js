@@ -10,10 +10,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       finished: false
     };
     console.log('Received batch_download_with_names:', message.images);
+    const username = message.username || 'weibo_user';
     message.images.forEach((img, idx) => {
       chrome.downloads.download({
         url: img.url,
-        filename: `weibo_album/${img.filename}`,
+        filename: `${username}/${img.filename}`,
         saveAs: false
       }, (downloadId) => {
         if (chrome.runtime.lastError) {
@@ -54,4 +55,4 @@ chrome.downloads.onChanged.addListener(function (delta) {
       // Do not clear batchDownloadState here; keep it for popup state recovery
     }
   }
-}); 
+});

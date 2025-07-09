@@ -135,7 +135,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const url = message.links[i];
         console.log('Debug: downloading', i + 1, 'of', message.links.length, ':', url);
         const filename = url.split('/').pop().split('?')[0];
-        await downloadImage(url, `weibo_album/${filename}`);
+        await downloadImage(url, `${username}/${filename}`);
       }
     })();
     sendResponse({ ok: true });
@@ -143,6 +143,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.action === 'batch_download_grouped' && Array.isArray(message.groupedImages)) {
     console.log('Debug: content.js received', message.groupedImages.length, 'groups to download');
+    const username = message.username || 'weibo_user';
     (async () => {
       for (const group of message.groupedImages) {
         const folderName = `${group.year}-${group.month.replace('月', '').padStart(2, '0')}`;
@@ -151,7 +152,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         for (let i = 0; i < group.images.length; i++) {
           const url = group.images[i];
           const filename = url.split('/').pop().split('?')[0];
-          await downloadImage(url, `weibo_album/${folderName}/${filename}`);
+          await downloadImage(url, `${username}/${folderName}/${filename}`);
         }
       }
     })();

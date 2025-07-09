@@ -11,6 +11,19 @@
     .link-list { margin: 10px 0; }
     .header { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; }
     .header img { width: 24px; height: 24px; }
+    .user-info {
+      margin-bottom: 15px;
+      padding: 8px 12px;
+      background: #e3f2fd;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #1976d2;
+      display: none;
+    }
+    .user-info.error {
+      background: #ffebee;
+      color: #d32f2f;
+    }
     .download-controls { display: flex; align-items: center; gap: 8px; }
     .download-controls label { font-size: 13px; }
     .download-controls select { min-width: 70px; font-size: 13px; }
@@ -41,6 +54,9 @@
   <div class="header">
     <img src="icon128.png" alt="Icon">
     <h2>微博相册原图下载</h2>
+  </div>
+  <div id="user-info" class="user-info">
+    <div id="user-info-text"></div>
   </div>
   <button id="fetch-btn">抓取原图链接</button>
   <div class="link-list">

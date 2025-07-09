@@ -42,7 +42,7 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
 
 3. **Check Your Download Folder:**
    - Go to the folder specified in your Chrome download settings to view the download progress and find your images.
-   - By default, all images will be saved in a folder named `weibo_album`.
+   - By default, all images will be saved in a folder named after the Weibo username, prefixed with @.
 
 ## Why a Chrome Extension (Not a Desktop App or CLI Tool)?
 

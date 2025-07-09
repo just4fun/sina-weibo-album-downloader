@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const downloadBtn = document.getElementById('download-btn');
   const imgLinksUl = document.getElementById('img-links');
   const startGroupSelect = document.getElementById('start-group');
+  const userInfoDiv = document.getElementById('user-info');
+  const userInfoText = document.getElementById('user-info-text');
   // Place fetchStatusSpan above the image list
   let fetchStatusSpan = document.getElementById('fetch-status');
   if (!fetchStatusSpan) {
@@ -15,6 +17,78 @@ document.addEventListener('DOMContentLoaded', function () {
   let links = [];
   let groupedImages = [];
   let isFetching = false;
+  let currentUsername = '';
+
+  // Check current page and get user info
+  function checkCurrentPage() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      const url = tabs[0].url;
+      const albumMatch = url.match(/weibo\.com\/u\/(\d+)\?tabtype=album/);
+
+      if (albumMatch) {
+        const uid = albumMatch[1];
+        getUserInfo(uid);
+      } else {
+        showError('请先访问用户的相册页面 (如: weibo.com/u/用户ID?tabtype=album)');
+        disableAllButtons();
+      }
+    });
+  }
+
+  // Get user info from API
+  function getUserInfo(uid) {
+    fetch(`https://weibo.com/ajax/profile/info?uid=${uid}`, {
+      credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.ok && data.data && data.data.user) {
+        const user = data.data.user;
+        currentUsername = '@' + user.screen_name;
+        showUserInfo(`准备抓取用户 <b>${currentUsername}</b> 的相册`);
+        enableAllButtons();
+      } else {
+        showError('无法获取用户信息，请确保已登录微博');
+        disableAllButtons();
+      }
+    })
+    .catch(error => {
+      console.error('Failed to get user info:', error);
+      showError('获取用户信息失败，请检查网络连接');
+      disableAllButtons();
+    });
+  }
+
+  // Show user info
+  function showUserInfo(text) {
+    userInfoText.innerHTML = text; // Use innerHTML to allow bold tags
+    userInfoDiv.style.display = 'block';
+    userInfoDiv.classList.remove('error');
+  }
+
+  // Show error message
+  function showError(text) {
+    userInfoText.textContent = text;
+    userInfoDiv.style.display = 'block';
+    userInfoDiv.classList.add('error');
+  }
+
+  // Disable all buttons
+  function disableAllButtons() {
+    fetchBtn.disabled = true;
+    downloadBtn.disabled = true;
+    startGroupSelect.disabled = true;
+  }
+
+  // Enable all buttons
+  function enableAllButtons() {
+    fetchBtn.disabled = false;
+    downloadBtn.disabled = false;
+    startGroupSelect.disabled = false;
+  }
+
+  // Initialize page check
+  checkCurrentPage();
 
   // Listen for progress updates from content.js
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -71,9 +145,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
           });
           downloadBtn.disabled = false;
+
+          // Re-show user info after successful fetch
+          checkCurrentPage();
         } else {
           fetchStatusSpan.textContent = '未找到原图链接';
           imgLinksUl.innerHTML = '<li>未找到原图链接</li>';
+          checkCurrentPage();
         }
       });
     });
@@ -100,9 +178,21 @@ document.addEventListener('DOMContentLoaded', function () {
       // Show reward section
       const rewardSection = document.getElementById('reward-section');
       rewardSection.style.display = 'block';
+      
+      // Smooth scroll to bottom to show reward code
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
 
       chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: 'batch_download_grouped', groupedImages: filteredGroups });
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: 'batch_download_grouped',
+          groupedImages: filteredGroups,
+          username: currentUsername
+        });
       });
     }
   });
