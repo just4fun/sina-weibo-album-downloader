@@ -1,7 +1,7 @@
 # 新浪微博相册批量下载器（Chrome 扩展）
 
 <p align="center">
-  <img src="icon300.png" alt="Sina Weibo Album Downloader Icon">
+  <img src="assets/logo.png" alt="Sina Weibo Album Downloader Icon">
 </p>
 
 [English README is available here (README.md)](./README.md)
@@ -14,11 +14,11 @@
 
 ## 使用前提
 
-- **关闭 Chrome 设置中的“下载前询问每个文件的保存位置”：**
-  进入 `chrome://settings/downloads`，关闭“下载前询问每个文件的保存位置”。
+- **关闭 Chrome 下载设置：**
+  进入 `chrome://settings/downloads`，关闭"下载前询问每个文件的保存位置"和"下载完成后显示"。
 
     <p align="center">
-     <img src="downloads_settings.png" alt="Downloads Settings" width="500" />
+     <img src="assets/downloads_settings.png" alt="Downloads Settings" width="500" />
    </p>
 
 - **为什么要这样设置？**
@@ -26,23 +26,37 @@
 
 ## 使用方法
 
-1. **点击“抓取原图链接”按钮：**
+1. **导航到微博用户的相册页面：**
+   - 前往你想要下载照片的微博用户主页，然后进入他们的相册/照片区域。
+
+   <p align="center">
+     <img src="assets/fetch_not_start.png" alt="Navigate to Weibo Album Page" />
+   </p>
+
+2. **点击"抓取原图链接"按钮：**
    - 浏览器会自动滚动微博相册页面到底部，确保所有图片链接都被加载和收集。
 
    <p align="center">
-     <img src="fetch_original_image_links.png" alt="Batch Fetch Original Image Links" />
+     <img src="assets/fetch_in_progress.png" alt="Fetch Original Image Links in Progress" />
    </p>
 
-2. **点击“批量下载”按钮：**
+3. **点击"批量下载"按钮：**
    - 此时你可以关闭弹窗，图片会在浏览器后台持续下载，只要浏览器未关闭即可。
 
    <p align="center">
-     <img src="batch_download.png" alt="Batch Download" />
+     <img src="assets/fetch_done.png" alt="Batch Download Ready" />
    </p>
 
-3. **检查你的下载文件夹：**
+4. **检查你的下载文件夹：**
    - 前往 Chrome 下载设置中指定的文件夹，查看下载进度和已保存的图片。
    - 默认所有图片会保存在以微博用户名（前面带@）命名的文件夹中。
+
+   <p align="center">
+     <img src="assets/grouped_images.png" alt="Grouped Images in Download Folder" width="800" />
+   </p>
+
+5. **💡 提示：页面刷新后恢复下载：**
+   - 如果不小心刷新或者关闭了当前页面，下载就会停止。你可以重新点击抓取按钮，然后你可以选择具体从某一个分组开始，避免重复下载之前已经下载过的照片。
 
 ## 为什么用 Chrome 扩展（而不是桌面应用或命令行工具）？
 

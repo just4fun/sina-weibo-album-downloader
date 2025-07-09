@@ -1,7 +1,7 @@
 # Sina Weibo Album Downloader (Chrome Extension)
 
 <p align="center">
-  <img src="icon300.png" alt="Sina Weibo Album Downloader Icon">
+  <img src="assets/logo.png" alt="Sina Weibo Album Downloader Icon">
 </p>
 
 [简体中文版 README 在此 (README.zh-CN.md)](./README.zh-CN.md)
@@ -14,11 +14,11 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
 
 ## Prerequisites
 
-- **Disable “Ask where to save each file before downloading” in Chrome settings:**
-  Go to `chrome://settings/downloads` and turn off “Ask where to save each file before downloading.”
+- **Disable Chrome download settings:**
+  Go to `chrome://settings/downloads` and turn off both "Ask where to save each file before downloading" and "Show downloads when they're done."
 
     <p align="center">
-     <img src="downloads_settings.png" alt="Downloads Settings" width="500" />
+     <img src="assets/downloads_settings.png" alt="Downloads Settings" width="500" />
    </p>
 
 - **Why?**
@@ -26,23 +26,37 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
 
 ## How to Use
 
-1. **Click “抓取原图链接” (Fetch Original Image Links):**
+1. **Navigate to the Weibo user's album page:**
+   - Go to the Weibo user's profile page whose photos you want to download, then navigate to their album/photo section.
+
+   <p align="center">
+     <img src="assets/fetch_not_start.png" alt="Navigate to Weibo Album Page" width="500" />
+   </p>
+
+2. **Click "抓取原图链接" (Fetch Original Image Links):**
    - The browser will automatically scroll down the Weibo album page until it reaches the bottom, ensuring all image links are loaded and collected.
 
    <p align="center">
-     <img src="fetch_original_image_links.png" alt="Batch Fetch Original Image Links" />
+     <img src="assets/fetch_in_progress.png" alt="Fetch Original Image Links in Progress" width="500" />
    </p>
 
-2. **Click “批量下载” (Batch Download):**
+3. **Click "批量下载" (Batch Download):**
    - You can now close the popup. The images will continue downloading in the background as long as your browser remains open.
 
    <p align="center">
-     <img src="batch_download.png" alt="Batch Download" />
+     <img src="assets/fetch_done.png" alt="Batch Download Ready" width="500" />
    </p>
 
-3. **Check Your Download Folder:**
+4. **Check Your Download Folder:**
    - Go to the folder specified in your Chrome download settings to view the download progress and find your images.
    - By default, all images will be saved in a folder named after the Weibo username, prefixed with @.
+
+   <p align="center">
+     <img src="assets/grouped_images.png" alt="Grouped Images in Download Folder" width="800" />
+   </p>
+
+5. **💡 Tip: Resume Downloads After Page Refresh:**
+   - If you accidentally refresh or close the current page, downloads will stop. You can click the fetch button again and select a specific group to start from, avoiding re-downloading previously downloaded photos.
 
 ## Why a Chrome Extension (Not a Desktop App or CLI Tool)?
 
@@ -55,4 +69,4 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
 
 - **Browser Limitations:** Chrome extensions cannot reliably create and download large ZIP files due to memory and security restrictions.
 - **Popup Lifecycle:** The extension popup may be closed by Chrome during long operations, interrupting ZIP creation.
-- **CORS and Anti-Leeching:** Direct downloads from the background script are blocked by Weibo’s anti-hotlinking, so all downloads must be initiated from the page context.
+- **CORS and Anti-Leeching:** Direct downloads from the background script are blocked by Weibo's anti-hotlinking, so all downloads must be initiated from the page context.
