@@ -26,24 +26,48 @@ async function downloadImage(url, filename) {
   }
 }
 
-// Get all original image links from Weibo album
+// Get all original image links from Weibo album with year-month grouping
 function getWeiboAlbumOriginalImages() {
-  // Find all divs containing ProfileAlbum_box class
-  const albumBoxes = document.querySelectorAll('div[class*="ProfileAlbum_box"]');
-  const links = [];
+  // Find all year-month groups
+  const albumItems = document.querySelectorAll('div[class*="ProfileAlbum_item"]');
+  const groupedImages = [];
 
-  albumBoxes.forEach(box => {
-    // Find img with woo-picture-img class within each box
-    const imgs = box.querySelectorAll('img.woo-picture-img');
-    imgs.forEach(img => {
-      if (img.src && (/large\//.test(img.src) || /\/orj360\//.test(img.src) || /\/orj480\//.test(img.src) || /\/orj960\//.test(img.src) || /\/orj1920\//.test(img.src))) {
-        const originalUrl = img.src.replace(/thumb150|thumb180|thumb300|mw690|orj360|orj480|orj960|orj1920|bmiddle|small/g, 'large');
-        links.push(originalUrl);
+  albumItems.forEach(item => {
+    // Extract year and month information
+    const monthElement = item.querySelector('div[class*="ProfileAlbum_m"]');
+    const yearElement = item.querySelector('div[class*="ProfileAlbum_y"]');
+
+    if (monthElement && yearElement) {
+      const month = monthElement.textContent.trim();
+      let year = yearElement.textContent.trim();
+
+      // If year is empty, use current year
+      if (!year) {
+        year = new Date().getFullYear().toString();
       }
-    });
+
+      // Find all images in this year-month group
+      const imgs = item.querySelectorAll('img.woo-picture-img');
+      const imageUrls = [];
+
+      imgs.forEach(img => {
+        if (img.src && (/large\//.test(img.src) || /\/orj360\//.test(img.src) || /\/orj480\//.test(img.src) || /\/orj960\//.test(img.src) || /\/orj1920\//.test(img.src))) {
+          const originalUrl = img.src.replace(/thumb150|thumb180|thumb300|mw690|orj360|orj480|orj960|orj1920|bmiddle|small/g, 'large');
+          imageUrls.push(originalUrl);
+        }
+      });
+
+      if (imageUrls.length > 0) {
+        groupedImages.push({
+          year: year,
+          month: month,
+          images: imageUrls
+        });
+      }
+    }
   });
 
-  return Array.from(new Set(links));
+  return groupedImages;
 }
 
 // Auto scroll to bottom and fetch all image links
@@ -64,8 +88,9 @@ async function autoScrollAndFetchAllLinks() {
 
     function sendProgress(count) {
       // Report original image links count instead of total image count
-      const originalLinks = getWeiboAlbumOriginalImages();
-      chrome.runtime.sendMessage({ action: 'scroll_progress', count: originalLinks.length });
+      const groupedImages = getWeiboAlbumOriginalImages();
+      const totalImages = groupedImages.reduce((sum, group) => sum + group.images.length, 0);
+      chrome.runtime.sendMessage({ action: 'scroll_progress', count: totalImages, groupCount: groupedImages.length });
     }
 
     function scrollAndCheck() {
@@ -82,8 +107,8 @@ async function autoScrollAndFetchAllLinks() {
       lastScrollHeight = curScrollHeight;
       if (stableCount >= maxStable) {
         // Considered loaded
-        const links = getWeiboAlbumOriginalImages();
-        resolve(links);
+        const groupedImages = getWeiboAlbumOriginalImages();
+        resolve(groupedImages);
       } else {
         setTimeout(scrollAndCheck, interval);
       }
@@ -94,12 +119,12 @@ async function autoScrollAndFetchAllLinks() {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'fetch_image_links') {
-    const links = getWeiboAlbumOriginalImages();
-    sendResponse({ links });
+    const groupedImages = getWeiboAlbumOriginalImages();
+    sendResponse({ groupedImages });
   }
   if (message.action === 'auto_scroll_and_fetch') {
-    autoScrollAndFetchAllLinks().then(links => {
-      sendResponse({ links });
+    autoScrollAndFetchAllLinks().then(groupedImages => {
+      sendResponse({ groupedImages });
     });
     return true;
   }
@@ -111,6 +136,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('Debug: downloading', i + 1, 'of', message.links.length, ':', url);
         const filename = url.split('/').pop().split('?')[0];
         await downloadImage(url, `weibo_album/${filename}`);
+      }
+    })();
+    sendResponse({ ok: true });
+  }
+
+  if (message.action === 'batch_download_grouped' && Array.isArray(message.groupedImages)) {
+    console.log('Debug: content.js received', message.groupedImages.length, 'groups to download');
+    (async () => {
+      for (const group of message.groupedImages) {
+        const folderName = `${group.year}-${group.month.replace('月', '').padStart(2, '0')}`;
+        console.log('Debug: downloading group', folderName, 'with', group.images.length, 'images');
+
+        for (let i = 0; i < group.images.length; i++) {
+          const url = group.images[i];
+          const filename = url.split('/').pop().split('?')[0];
+          await downloadImage(url, `weibo_album/${folderName}/${filename}`);
+        }
       }
     })();
     sendResponse({ ok: true });
