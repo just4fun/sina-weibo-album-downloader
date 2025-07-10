@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "新浪微博相册原图批量下载器",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "抓取新浪微博相册图片原图链接并批量下载。",
   "permissions": [
     "downloads",
