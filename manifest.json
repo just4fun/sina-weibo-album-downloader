@@ -5,7 +5,6 @@
   "description": "抓取新浪微博相册图片原图链接并批量下载。",
   "permissions": [
     "downloads",
-    "scripting",
     "activeTab"
   ],
   "host_permissions": [
