@@ -15,6 +15,38 @@ async function fetchImageAsBlob(url) {
   }
 }
 
+// Get user info from API (running in page context)
+async function getUserInfo(uid) {
+  try {
+    const response = await fetch(`https://weibo.com/ajax/profile/info?uid=${uid}`, {
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    if (data.ok && data.data && data.data.user) {
+      return {
+        success: true,
+        user: data.data.user
+      };
+    } else {
+      return {
+        success: false,
+        error: '获取用户信息失败，请检查页面是否正确加载'
+      };
+    }
+  } catch (error) {
+    console.error('Failed to get user info:', error);
+    return {
+      success: false,
+      error: '获取用户信息失败，请检查网络连接'
+    };
+  }
+}
+
 // Download image by sending blob URL to background.js
 async function downloadImage(url, filename) {
   try {
@@ -125,6 +157,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'auto_scroll_and_fetch') {
     autoScrollAndFetchAllLinks().then(groupedImages => {
       sendResponse({ groupedImages });
+    });
+    return true;
+  }
+  if (message.action === 'get_user_info' && message.uid) {
+    getUserInfo(message.uid).then(result => {
+      sendResponse(result);
     });
     return true;
   }
