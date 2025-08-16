@@ -37,25 +37,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Get user info from API
   function getUserInfo(uid) {
-    fetch(`https://weibo.com/ajax/profile/info?uid=${uid}`, {
-      credentials: 'include'
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.ok && data.data && data.data.user) {
-        const user = data.data.user;
-        currentUsername = '@' + user.screen_name;
-        showUserInfo(`准备抓取用户 <b>${currentUsername}</b> 的相册`);
-        enableAllButtons();
-      } else {
-        showError('无法获取用户信息，请确保已登录微博');
-        disableAllButtons();
-      }
-    })
-    .catch(error => {
-      console.error('Failed to get user info:', error);
-      showError('获取用户信息失败，请检查网络连接');
-      disableAllButtons();
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'get_user_info', uid: uid }, function (response) {
+        if (chrome.runtime.lastError) {
+          console.error('Failed to send message to content script:', chrome.runtime.lastError);
+          showError('无法与页面通信，请刷新页面后重试');
+          disableAllButtons();
+          return;
+        }
+
+        if (response && response.success) {
+          const user = response.user;
+          currentUsername = '@' + user.screen_name;
+          showUserInfo(`准备抓取用户 <b>${currentUsername}</b> 的相册`);
+          enableAllButtons();
+        } else {
+          const errorMsg = response ? response.error : '无法获取用户信息';
+          showError(errorMsg);
+          disableAllButtons();
+        }
+      });
     });
   }
 
