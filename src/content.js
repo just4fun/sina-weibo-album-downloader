@@ -99,6 +99,22 @@ function getWeiboAlbumOriginalImages() {
     }
   });
 
+  // Sort groupedImages by year and month from oldest to newest
+  groupedImages.sort((a, b) => {
+    const yearA = parseInt(a.year);
+    const yearB = parseInt(b.year);
+
+    if (yearA !== yearB) {
+      return yearA - yearB;
+    }
+
+    // Extract month number from month string (e.g., "1月" -> 1)
+    const monthA = parseInt(a.month.replace('月', ''));
+    const monthB = parseInt(b.month.replace('月', ''));
+
+    return monthA - monthB;
+  });
+
   return groupedImages;
 }
 

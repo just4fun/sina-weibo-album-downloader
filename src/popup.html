@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>微博相册原图下载</title>
   <style>
-    body { font-family: Arial, sans-serif; width: 350px; margin: 10px; }
+    body { font-family: Arial, sans-serif; width: 450px; margin: 10px; }
     button { margin: 5px 0; }
     ul { max-height: 200px; overflow-y: auto; padding: 0; list-style: none; }
     li { word-break: break-all; font-size: 12px; margin-bottom: 4px; }
@@ -48,6 +48,12 @@
       margin: 8px 0;
       line-height: 1.4;
     }
+    .date-range-error {
+      color: #d32f2f;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -67,13 +73,16 @@
       <label for="start-group">从分组</label>
       <select id="start-group" disabled>
       </select>
-      <label for="start-group">开始</label>
+      <label for="end-group">到分组</label>
+      <select id="end-group" disabled>
+      </select>
       <button id="download-btn" disabled>批量下载</button>
     </div>
+    <div id="date-range-error" class="date-range-error"></div>
     <div id="download-status" class="download-status"></div>
   </div>
   <div id="reward-section" class="reward-section">
-    <div class="reward-text">✨ 有帮助你备份微博回忆吗？可以请我喝杯冷萃 🥃～</div>
+    <div class="reward-text">✨ 有帮助你备份回忆吗？可以扫码请我喝杯咖啡，支持我继续维护。</div>
     <img src="../assets/reward_code.png" alt="微信赞赏码">
   </div>
   <script src="popup.js"></script>
