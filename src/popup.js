@@ -3,8 +3,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const downloadBtn = document.getElementById('download-btn');
   const imgLinksUl = document.getElementById('img-links');
   const startGroupSelect = document.getElementById('start-group');
+  const endGroupSelect = document.getElementById('end-group');
   const userInfoDiv = document.getElementById('user-info');
   const userInfoText = document.getElementById('user-info-text');
+  const dateRangeErrorDiv = document.getElementById('date-range-error');
   // Place fetchStatusSpan above the image list
   let fetchStatusSpan = document.getElementById('fetch-status');
   if (!fetchStatusSpan) {
@@ -50,7 +52,8 @@ document.addEventListener('DOMContentLoaded', function () {
           const user = response.user;
           currentUsername = '@' + user.screen_name;
           showUserInfo(`准备抓取用户 <b>${currentUsername}</b> 的相册`);
-          enableAllButtons();
+          // Only enable fetch button, keep dropdowns and download button disabled until fetch completes
+          fetchBtn.disabled = false;
         } else {
           const errorMsg = response ? response.error : '无法获取用户信息';
           showError(errorMsg);
@@ -79,14 +82,37 @@ document.addEventListener('DOMContentLoaded', function () {
     fetchBtn.disabled = true;
     downloadBtn.disabled = true;
     startGroupSelect.disabled = true;
+    endGroupSelect.disabled = true;
   }
 
-  // Enable all buttons
-  function enableAllButtons() {
-    fetchBtn.disabled = false;
-    downloadBtn.disabled = false;
-    startGroupSelect.disabled = false;
+  // Validate date range and update UI accordingly
+  function validateDateRange() {
+    const startIndex = parseInt(startGroupSelect.value);
+    const endIndex = parseInt(endGroupSelect.value);
+
+    // Check if both selections are valid
+    if (isNaN(startIndex) || isNaN(endIndex)) {
+      downloadBtn.disabled = true;
+      return false;
+    }
+
+    // Check if start month is later than end month
+    if (startIndex > endIndex) {
+      dateRangeErrorDiv.textContent = '结束月份不能早于开始月份';
+      dateRangeErrorDiv.style.display = 'block';
+      downloadBtn.disabled = true;
+      return false;
+    } else {
+      dateRangeErrorDiv.style.display = 'none';
+      // Only enable download button if not currently fetching and both dropdowns are enabled
+      downloadBtn.disabled = isFetching || startGroupSelect.disabled || endGroupSelect.disabled;
+      return true;
+    }
   }
+
+  // Add event listeners for date range validation
+  startGroupSelect.addEventListener('change', validateDateRange);
+  endGroupSelect.addEventListener('change', validateDateRange);
 
   // Initialize page check
   checkCurrentPage();
@@ -107,8 +133,11 @@ document.addEventListener('DOMContentLoaded', function () {
     groupedImages = [];
     downloadBtn.disabled = true;
     startGroupSelect.disabled = true;
+    endGroupSelect.disabled = true;
     startGroupSelect.innerHTML = '';
+    endGroupSelect.innerHTML = '';
     downloadStatusDiv.textContent = '';
+    dateRangeErrorDiv.style.display = 'none';
     document.getElementById('reward-section').style.display = 'none';
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'auto_scroll_and_fetch' }, function (response) {
@@ -120,16 +149,27 @@ document.addEventListener('DOMContentLoaded', function () {
           const totalImages = groupedImages.reduce((sum, group) => sum + group.images.length, 0);
           fetchStatusSpan.textContent = `已成功抓取到 ${totalImages} 张原图，共 ${groupedImages.length} 个分组。`;
 
-          // Populate dropdown with groups
+          // Populate dropdowns with groups
           startGroupSelect.innerHTML = '';
+          endGroupSelect.innerHTML = '';
           groupedImages.forEach((group, groupIndex) => {
             const option = document.createElement('option');
             option.value = groupIndex;
             option.textContent = `${group.year}-${group.month} (${group.images.length} 张)`;
             startGroupSelect.appendChild(option);
+
+            const endOption = document.createElement('option');
+            endOption.value = groupIndex;
+            endOption.textContent = `${group.year}-${group.month} (${group.images.length} 张)`;
+            endGroupSelect.appendChild(endOption);
           });
           startGroupSelect.disabled = false;
-          startGroupSelect.value = '0'; // Default to first group
+          endGroupSelect.disabled = false;
+          startGroupSelect.value = '0'; // Default to first group (oldest)
+          endGroupSelect.value = (groupedImages.length - 1).toString(); // Default to last group (newest)
+
+          // Validate initial date range
+          validateDateRange();
 
           // Display grouped images
           groupedImages.forEach((group, groupIndex) => {
@@ -151,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
           checkCurrentPage();
         } else {
           fetchStatusSpan.textContent = '未找到原图链接';
-          imgLinksUl.innerHTML = '<li>未找到原图链接</li>';
+          imgLinksUl.innerHTML = '';
           checkCurrentPage();
         }
       });
@@ -161,20 +201,30 @@ document.addEventListener('DOMContentLoaded', function () {
   // Batch download: let content.js handle blob fetching and downloading
   downloadBtn.addEventListener('click', async () => {
     if (groupedImages.length > 0) {
-      const selectedGroupIndex = parseInt(startGroupSelect.value, 10);
-      if (isNaN(selectedGroupIndex) || selectedGroupIndex < 0 || selectedGroupIndex >= groupedImages.length) {
-        downloadStatusDiv.textContent = '请选择起始分组。';
+      // Validate date range before proceeding
+      if (!validateDateRange()) {
         return;
       }
 
-      // Create filtered groups starting from the selected group
-      const filteredGroups = groupedImages.slice(selectedGroupIndex);
+      const startGroupIndex = parseInt(startGroupSelect.value, 10);
+      const endGroupIndex = parseInt(endGroupSelect.value, 10);
+
+      if (isNaN(startGroupIndex) || isNaN(endGroupIndex) ||
+          startGroupIndex < 0 || endGroupIndex < 0 ||
+          startGroupIndex >= groupedImages.length || endGroupIndex >= groupedImages.length) {
+        downloadStatusDiv.textContent = '请选择有效的分组范围。';
+        return;
+      }
+
+      // Create filtered groups from start to end (inclusive)
+      const filteredGroups = groupedImages.slice(startGroupIndex, endGroupIndex + 1);
 
       const totalDownloadImages = filteredGroups.reduce((sum, group) => sum + group.images.length, 0);
-      const totalImages = groupedImages.reduce((sum, group) => sum + group.images.length, 0);
-      const startGroup = groupedImages[selectedGroupIndex];
+      const startGroup = groupedImages[startGroupIndex];
+      const endGroup = groupedImages[endGroupIndex];
       const startGroupName = `${startGroup.year}-${startGroup.month}`;
-      downloadStatusDiv.innerHTML = `图片正在后台进行下载，将从分组 ${startGroupName} 开始下载，共 ${totalDownloadImages} 张图片。<br><br>请在 chrome://settings/downloads 设置的文件夹中查看。`;
+      const endGroupName = `${endGroup.year}-${endGroup.month}`;
+      downloadStatusDiv.innerHTML = `图片正在后台进行下载，将从分组 ${startGroupName} 到 ${endGroupName}，共 ${totalDownloadImages} 张图片。<br><br>请在 chrome://settings/downloads 设置的文件夹中查看。`;
 
       // Show reward section
       const rewardSection = document.getElementById('reward-section');
