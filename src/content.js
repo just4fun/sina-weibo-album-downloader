@@ -5,8 +5,6 @@ async function fetchImageAsBlob(url) {
     if (!response.ok) throw new Error('Failed to fetch image: ' + url);
     return await response.blob();
   } catch (e) {
-    // If CORS fails, try with no-cors mode
-    console.log('CORS failed, trying no-cors mode for:', url);
     const response = await fetch(url, {
       credentials: 'include',
       mode: 'no-cors'
@@ -110,7 +108,7 @@ async function fetchAllImagesViaAPI(uid) {
 
     const totalImages = groupOrder.reduce((sum, k) => sum + groupData[k].images.length, 0);
     chrome.runtime.sendMessage({
-      action: 'scroll_progress',
+      action: 'fetch_progress',
       count: totalImages,
       groupCount: groupOrder.length
     });
@@ -132,7 +130,7 @@ async function fetchAllImagesViaAPI(uid) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'auto_scroll_and_fetch' && message.uid) {
+  if (message.action === 'fetch_album_images' && message.uid) {
     fetchAllImagesViaAPI(message.uid).then(groupedImages => {
       sendResponse({ groupedImages });
     });
@@ -144,27 +142,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
-  if (message.action === 'batch_download_blob' && Array.isArray(message.links)) {
-    console.log('Debug: content.js received', message.links.length, 'links to download');
-    (async () => {
-      for (let i = 0; i < message.links.length; i++) {
-        const url = message.links[i];
-        console.log('Debug: downloading', i + 1, 'of', message.links.length, ':', url);
-        const filename = url.split('/').pop().split('?')[0];
-        await downloadImage(url, `${username}/${filename}`);
-      }
-    })();
-    sendResponse({ ok: true });
-  }
-
   if (message.action === 'batch_download_grouped' && Array.isArray(message.groupedImages)) {
-    console.log('Debug: content.js received', message.groupedImages.length, 'groups to download');
     const username = message.username || 'weibo_user';
     (async () => {
       for (const group of message.groupedImages) {
         const folderName = `${group.year}-${group.month.replace('月', '').padStart(2, '0')}`;
-        console.log('Debug: downloading group', folderName, 'with', group.images.length, 'images');
-
         for (let i = 0; i < group.images.length; i++) {
           const url = group.images[i];
           const pid = url.split('/').pop();

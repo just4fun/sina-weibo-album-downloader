@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Listen for progress updates from content.js
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === 'scroll_progress' && typeof message.count === 'number' && isFetching) {
+    if (message.action === 'fetch_progress' && typeof message.count === 'number' && isFetching) {
       fetchStatusSpan.textContent = `正在抓取所有原图链接（已找到第 ${message.count} 张，第 ${message.groupCount || 0} 个分组）...`;
     }
   });
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
     dateRangeErrorDiv.style.display = 'none';
     document.getElementById('reward-section').style.display = 'none';
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'auto_scroll_and_fetch', uid: currentUid }, function (response) {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'fetch_album_images', uid: currentUid }, function (response) {
         fetchBtn.disabled = false;
         isFetching = false;
         imgLinksUl.innerHTML = '';
