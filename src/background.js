@@ -43,6 +43,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       saveAs: false
     });
   }
+  if (message.action === 'download_url' && message.url && message.filename) {
+    chrome.downloads.download({
+      url: message.url,
+      filename: message.filename,
+      saveAs: false
+    });
+  }
 });
 
 chrome.downloads.onChanged.addListener(function (delta) {

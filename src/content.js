@@ -72,8 +72,8 @@ function pidToImageUrl(pid) {
 
 // Fetch all album images via getImageWall API, grouped by year-month
 async function fetchAllImagesViaAPI(uid) {
-  const groupMap = {};   // "YYYY-MM" → url[]
-  const groupOrder = []; // ordered keys
+  const groupData = {};   // "YYYY-MM" → { images: url[], liveVideos: { imageUrl: movUrl } }
+  const groupOrder = [];
 
   let sinceid = '';
   let currentYear = new Date().getFullYear().toString();
@@ -95,14 +95,20 @@ async function fetchAllImagesViaAPI(uid) {
       if (!item.pid) continue;
 
       const key = `${currentYear}-${currentMonth.padStart(2, '0')}`;
-      if (!groupMap[key]) {
-        groupMap[key] = [];
+      if (!groupData[key]) {
+        groupData[key] = { images: [], liveVideos: {} };
         groupOrder.push(key);
       }
-      groupMap[key].push(pidToImageUrl(item.pid));
+
+      const imageUrl = pidToImageUrl(item.pid);
+      groupData[key].images.push(imageUrl);
+
+      if (item.type === 'livephoto' && item.video) {
+        groupData[key].liveVideos[imageUrl] = item.video;
+      }
     }
 
-    const totalImages = groupOrder.reduce((sum, k) => sum + groupMap[k].length, 0);
+    const totalImages = groupOrder.reduce((sum, k) => sum + groupData[k].images.length, 0);
     chrome.runtime.sendMessage({
       action: 'scroll_progress',
       count: totalImages,
@@ -119,7 +125,8 @@ async function fetchAllImagesViaAPI(uid) {
     return {
       year,
       month: `${parseInt(month)}月`,
-      images: groupMap[key]
+      images: groupData[key].images,
+      liveVideos: groupData[key].liveVideos
     };
   });
 }
@@ -160,8 +167,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         for (let i = 0; i < group.images.length; i++) {
           const url = group.images[i];
-          const filename = url.split('/').pop().split('?')[0];
-          await downloadImage(url, `${username}/${folderName}/${filename}`);
+          const pid = url.split('/').pop();
+          await downloadImage(url, `${username}/${folderName}/${pid}`);
+
+          const movUrl = group.liveVideos && group.liveVideos[url];
+          if (movUrl) {
+            chrome.runtime.sendMessage({
+              action: 'download_url',
+              url: movUrl,
+              filename: `${username}/${folderName}/${pid}.mov`
+            });
+          }
         }
       }
     })();
