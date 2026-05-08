@@ -30,14 +30,14 @@
    - 前往你想要下载照片的微博用户主页（如 `weibo.com/u/用户ID`），无需特意切换到相册 tab。
 
    <p align="center">
-     <img src="assets/fetch_not_start.png" alt="Navigate to Weibo Profile Page" />
+     <img src="assets/fetch_not_start.png" alt="Navigate to Weibo Profile Page" width="470" />
    </p>
 
 2. **点击"抓取原图链接"按钮：**
    - 插件会直接调用微博 API 获取全部图片链接，无需滚动页面。支持普通照片、GIF 动图和实况照片（Live Photo）。
 
    <p align="center">
-     <img src="assets/fetch_in_progress.png" alt="Fetch Original Image Links in Progress" />
+     <img src="assets/fetch_in_progress.png" alt="Fetch Original Image Links in Progress" width="470" />
    </p>
 
 3. **选择日期范围，点击"批量下载"按钮：**
@@ -45,7 +45,7 @@
    - 点击下载后即可关闭弹窗，图片会在浏览器后台持续下载，只要浏览器未关闭即可。
 
    <p align="center">
-     <img src="assets/fetch_done.png" alt="Batch Download Ready" />
+     <img src="assets/fetch_done.png" alt="Batch Download Ready" width="470" />
    </p>
 
 4. **检查你的下载文件夹：**

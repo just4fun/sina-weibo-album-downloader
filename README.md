@@ -18,7 +18,7 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
   Go to `chrome://settings/downloads` and turn off both "Ask where to save each file before downloading" and "Show downloads when they're done."
 
     <p align="center">
-     <img src="assets/downloads_settings.png" alt="Downloads Settings" width="500" />
+     <img src="assets/downloads_settings.png" alt="Downloads Settings" width="470" />
    </p>
 
 - **Why?**
@@ -30,14 +30,14 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
    - Go to any page of the Weibo user whose photos you want to download (e.g., `weibo.com/u/用户ID`). You do not need to navigate to the album tab specifically.
 
    <p align="center">
-     <img src="assets/fetch_not_start.png" alt="Navigate to Weibo Profile Page" width="500" />
+     <img src="assets/fetch_not_start.png" alt="Navigate to Weibo Profile Page" width="470" />
    </p>
 
 2. **Click "抓取原图链接" (Fetch Original Image Links):**
    - The extension calls Weibo's API to collect all image links. No scrolling is needed — all photos are fetched directly, including regular photos, GIFs, and Live Photos.
 
    <p align="center">
-     <img src="assets/fetch_in_progress.png" alt="Fetch Original Image Links in Progress" width="500" />
+     <img src="assets/fetch_in_progress.png" alt="Fetch Original Image Links in Progress" width="470" />
    </p>
 
 3. **Select a date range and click "批量下载" (Batch Download):**
