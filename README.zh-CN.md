@@ -26,37 +26,46 @@
 
 ## 使用方法
 
-1. **导航到微博用户的相册页面：**
-   - 前往你想要下载照片的微博用户主页，然后进入他们的相册/照片区域。
+1. **导航到微博用户的主页：**
+   - 前往你想要下载照片的微博用户主页（如 `weibo.com/u/用户ID`），无需特意切换到相册 tab。
 
    <p align="center">
-     <img src="assets/fetch_not_start.png" alt="Navigate to Weibo Album Page" />
+     <img src="assets/fetch_not_start.png" alt="Navigate to Weibo Profile Page" width="470" />
    </p>
 
 2. **点击"抓取原图链接"按钮：**
-   - 浏览器会自动滚动微博相册页面到底部，确保所有图片链接都被加载和收集。
+   - 插件会直接调用微博 API 获取全部图片链接，无需滚动页面。支持普通照片、GIF 动图和实况照片（Live Photo）。
 
    <p align="center">
-     <img src="assets/fetch_in_progress.png" alt="Fetch Original Image Links in Progress" />
+     <img src="assets/fetch_in_progress.png" alt="Fetch Original Image Links in Progress" width="470" />
    </p>
 
-3. **点击"批量下载"按钮：**
-   - 此时你可以关闭弹窗，图片会在浏览器后台持续下载，只要浏览器未关闭即可。
+3. **选择日期范围，点击"批量下载"按钮：**
+   - 抓取完成后，图片会按年月分组。通过"从分组"和"到分组"两个下拉框选择你想下载的日期范围。
+   - 点击下载后即可关闭弹窗，图片会在浏览器后台持续下载，只要浏览器未关闭即可。
 
    <p align="center">
-     <img src="assets/fetch_done.png" alt="Batch Download Ready" />
+     <img src="assets/fetch_done.png" alt="Batch Download Ready" width="470" />
    </p>
 
 4. **检查你的下载文件夹：**
    - 前往 Chrome 下载设置中指定的文件夹，查看下载进度和已保存的图片。
-   - 默认所有图片会保存在以微博用户名（前面带@）命名的文件夹中。
+   - 图片保存在以微博用户名（前缀 @）命名的文件夹下，并按年月自动归类到子文件夹（如 `@用户名/2025-06/`）。
 
    <p align="center">
      <img src="assets/grouped_images.png" alt="Grouped Images in Download Folder" width="800" />
    </p>
 
 5. **💡 提示：页面刷新后恢复下载：**
-   - 如果不小心刷新或者关闭了当前页面，下载就会停止。你可以重新点击抓取按钮，然后你可以选择具体从某一个分组开始，避免重复下载之前已经下载过的照片。
+   - 如果不小心刷新或关闭了当前页面，下载会停止。重新点击抓取按钮后，通过日期范围下拉框选择从上次中断的月份继续，避免重复下载已保存的照片。
+
+6. **💡 提示：如何在 iPhone 上恢复实况照片（Live Photo）：**
+   - 实况照片会下载为**两个同名文件**：一个 `.jpg`（静态图）和一个 `.mov`（动态片段）。两个文件均完整保留了 Apple 的原始 metadata（Content Identifier UUID），实况效果可以完整恢复。
+   - **在 iPhone 上恢复实况照片的步骤：**
+     1. 将 `.jpg` 和 `.mov` **同时**导入 **macOS 照片 App**（两个文件一起拖入）。
+     2. 照片 App 会根据匹配的 metadata 自动将两者配对为实况照片。
+     3. 开启 **iCloud 照片**同步，实况照片即可同步到 iPhone。
+   - 注意：直接通过 AirDrop 将两个文件发送到 iPhone **无法**恢复实况效果，必须经由照片 App 导入配对。
 
 ## 为什么用 Chrome 扩展（而不是桌面应用或命令行工具）？
 

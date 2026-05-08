@@ -5,8 +5,6 @@ async function fetchImageAsBlob(url) {
     if (!response.ok) throw new Error('Failed to fetch image: ' + url);
     return await response.blob();
   } catch (e) {
-    // If CORS fails, try with no-cors mode
-    console.log('CORS failed, trying no-cors mode for:', url);
     const response = await fetch(url, {
       credentials: 'include',
       mode: 'no-cors'
@@ -51,128 +49,108 @@ async function getUserInfo(uid) {
 async function downloadImage(url, filename) {
   try {
     const blob = await fetchImageAsBlob(url);
+    let finalFilename = filename;
+    if (!filename.match(/\.\w{2,4}$/)) {
+      const ext = (blob.type && blob.type.startsWith('image/'))
+        ? blob.type.split('/')[1].replace('jpeg', 'jpg')
+        : 'jpg';
+      finalFilename = filename + '.' + ext;
+    }
     const blobUrl = URL.createObjectURL(blob);
-    chrome.runtime.sendMessage({ action: 'download_blob', blobUrl, filename });
+    chrome.runtime.sendMessage({ action: 'download_blob', blobUrl, filename: finalFilename });
   } catch (e) {
     console.error('Download failed', url, e);
   }
 }
 
-// Get all original image links from Weibo album with year-month grouping
-function getWeiboAlbumOriginalImages() {
-  // Find all year-month groups
-  const albumItems = document.querySelectorAll('div[class*="ProfileAlbum_item"]');
-  const groupedImages = [];
-
-  albumItems.forEach(item => {
-    // Extract year and month information
-    const monthElement = item.querySelector('div[class*="ProfileAlbum_m"]');
-    const yearElement = item.querySelector('div[class*="ProfileAlbum_y"]');
-
-    if (monthElement && yearElement) {
-      const month = monthElement.textContent.trim();
-      let year = yearElement.textContent.trim();
-
-      // If year is empty, use current year
-      if (!year) {
-        year = new Date().getFullYear().toString();
-      }
-
-      // Find all images in this year-month group
-      const imgs = item.querySelectorAll('img.woo-picture-img');
-      const imageUrls = [];
-
-      imgs.forEach(img => {
-        if (img.src && (/large\//.test(img.src) || /\/orj360\//.test(img.src) || /\/orj480\//.test(img.src) || /\/orj960\//.test(img.src) || /\/orj1920\//.test(img.src))) {
-          const originalUrl = img.src.replace(/thumb150|thumb180|thumb300|mw690|orj360|orj480|orj960|orj1920|bmiddle|small/g, 'large');
-          imageUrls.push(originalUrl);
-        }
-      });
-
-      if (imageUrls.length > 0) {
-        groupedImages.push({
-          year: year,
-          month: month,
-          images: imageUrls
-        });
-      }
-    }
-  });
-
-  // Sort groupedImages by year and month from oldest to newest
-  groupedImages.sort((a, b) => {
-    const yearA = parseInt(a.year);
-    const yearB = parseInt(b.year);
-
-    if (yearA !== yearB) {
-      return yearA - yearB;
-    }
-
-    // Extract month number from month string (e.g., "1月" -> 1)
-    const monthA = parseInt(a.month.replace('月', ''));
-    const monthB = parseInt(b.month.replace('月', ''));
-
-    return monthA - monthB;
-  });
-
-  return groupedImages;
+// Construct original image URL from pid
+function pidToImageUrl(pid) {
+  return `https://wx1.sinaimg.cn/large/${pid}`;
 }
 
-// Auto scroll to bottom and fetch all image links
-async function autoScrollAndFetchAllLinks() {
-  return new Promise((resolve) => {
-    let lastImgCount = 0;
-    let lastScrollHeight = 0;
-    let stableCount = 0;
-    const maxStable = 5; // how many times to check for no new images/height before stopping
-    const interval = 2000; // ms
-
-    function getImgCount() {
-      return document.querySelectorAll('img').length;
+async function fetchPageWithRetry(url, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const resp = await fetch(url, { credentials: 'include' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      return await resp.json();
+    } catch (e) {
+      if (i === retries - 1) throw e;
+      await new Promise(r => setTimeout(r, 1000 * (i + 1)));
     }
-    function getScrollHeight() {
-      return document.body.scrollHeight;
+  }
+}
+
+// Fetch all album images via getImageWall API, grouped by year-month
+async function fetchAllImagesViaAPI(uid) {
+  const groupData = {};   // "YYYY-MM" → { images: url[], liveVideos: { imageUrl: movUrl } }
+  const groupOrder = [];
+
+  let sinceid = '';
+  let currentYear = new Date().getFullYear().toString();
+  let currentMonth = '01';
+  let partial = false;
+
+  while (true) {
+    const params = `uid=${uid}&has_album=1${sinceid ? '&sinceid=' + encodeURIComponent(sinceid) : ''}`;
+    let data;
+    try {
+      data = await fetchPageWithRetry(`https://weibo.com/ajax/profile/getImageWall?${params}`);
+    } catch (e) {
+      partial = true;
+      break;
     }
 
-    function sendProgress(count) {
-      // Report original image links count instead of total image count
-      const groupedImages = getWeiboAlbumOriginalImages();
-      const totalImages = groupedImages.reduce((sum, group) => sum + group.images.length, 0);
-      chrome.runtime.sendMessage({ action: 'scroll_progress', count: totalImages, groupCount: groupedImages.length });
-    }
+    if (!data.ok || !data.data) break;
 
-    function scrollAndCheck() {
-      window.scrollTo(0, document.body.scrollHeight);
-      const curImgCount = getImgCount();
-      const curScrollHeight = getScrollHeight();
-      sendProgress(curImgCount);
-      if (curImgCount === lastImgCount && curScrollHeight === lastScrollHeight) {
-        stableCount++;
-      } else {
-        stableCount = 0;
+    const items = data.data.list || [];
+    for (const item of items) {
+      if (item.timeline_year) currentYear = item.timeline_year;
+      if (item.timeline_month) currentMonth = item.timeline_month;
+      if (!item.pid) continue;
+
+      const key = `${currentYear}-${currentMonth.padStart(2, '0')}`;
+      if (!groupData[key]) {
+        groupData[key] = { images: [], liveVideos: {} };
+        groupOrder.push(key);
       }
-      lastImgCount = curImgCount;
-      lastScrollHeight = curScrollHeight;
-      if (stableCount >= maxStable) {
-        // Considered loaded
-        const groupedImages = getWeiboAlbumOriginalImages();
-        resolve(groupedImages);
-      } else {
-        setTimeout(scrollAndCheck, interval);
+
+      const imageUrl = pidToImageUrl(item.pid);
+      groupData[key].images.push(imageUrl);
+
+      if (item.type === 'livephoto' && item.video) {
+        groupData[key].liveVideos[imageUrl] = item.video;
       }
     }
-    scrollAndCheck();
+
+    const totalImages = groupOrder.reduce((sum, k) => sum + groupData[k].images.length, 0);
+    chrome.runtime.sendMessage({
+      action: 'fetch_progress',
+      count: totalImages,
+      groupCount: groupOrder.length
+    });
+
+    const nextSinceid = data.data.since_id;
+    if (!nextSinceid || nextSinceid === '0' || nextSinceid === 0 || nextSinceid === sinceid) break;
+    sinceid = nextSinceid;
+  }
+
+  const groups = groupOrder.reverse().map(key => {
+    const [year, month] = key.split('-');
+    return {
+      year,
+      month: `${parseInt(month)}月`,
+      images: groupData[key].images,
+      liveVideos: groupData[key].liveVideos
+    };
   });
+  return { groups, partial };
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'fetch_image_links') {
-    const groupedImages = getWeiboAlbumOriginalImages();
-    sendResponse({ groupedImages });
-  }
-  if (message.action === 'auto_scroll_and_fetch') {
-    autoScrollAndFetchAllLinks().then(groupedImages => {
-      sendResponse({ groupedImages });
+  if (message.action === 'fetch_album_images' && message.uid) {
+    fetchAllImagesViaAPI(message.uid).then(({ groups, partial }) => {
+      sendResponse({ groupedImages: groups, partial });
     });
     return true;
   }
@@ -182,35 +160,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
-  if (message.action === 'batch_download_blob' && Array.isArray(message.links)) {
-    console.log('Debug: content.js received', message.links.length, 'links to download');
-    (async () => {
-      for (let i = 0; i < message.links.length; i++) {
-        const url = message.links[i];
-        console.log('Debug: downloading', i + 1, 'of', message.links.length, ':', url);
-        const filename = url.split('/').pop().split('?')[0];
-        await downloadImage(url, `${username}/${filename}`);
-      }
-    })();
-    sendResponse({ ok: true });
-  }
-
   if (message.action === 'batch_download_grouped' && Array.isArray(message.groupedImages)) {
-    console.log('Debug: content.js received', message.groupedImages.length, 'groups to download');
     const username = message.username || 'weibo_user';
     (async () => {
       for (const group of message.groupedImages) {
         const folderName = `${group.year}-${group.month.replace('月', '').padStart(2, '0')}`;
-        console.log('Debug: downloading group', folderName, 'with', group.images.length, 'images');
-
         for (let i = 0; i < group.images.length; i++) {
           const url = group.images[i];
-          const filename = url.split('/').pop().split('?')[0];
-          await downloadImage(url, `${username}/${folderName}/${filename}`);
+          const pid = url.split('/').pop();
+          await downloadImage(url, `${username}/${folderName}/${pid}`);
+
+          const movUrl = group.liveVideos && group.liveVideos[url];
+          if (movUrl) {
+            chrome.runtime.sendMessage({
+              action: 'download_url',
+              url: movUrl,
+              filename: `${username}/${folderName}/${pid}.mov`
+            });
+          }
         }
       }
     })();
     sendResponse({ ok: true });
   }
   return true;
-}); 
+});

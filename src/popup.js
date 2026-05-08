@@ -20,18 +20,20 @@ document.addEventListener('DOMContentLoaded', function () {
   let groupedImages = [];
   let isFetching = false;
   let currentUsername = '';
+  let currentUid = '';
 
   // Check current page and get user info
   function checkCurrentPage() {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       const url = tabs[0].url;
-      const albumMatch = url.match(/weibo\.com\/u\/(\d+)\?tabtype=album/);
+      const albumMatch = url.match(/weibo\.com\/u\/(\d+)/);
 
       if (albumMatch) {
         const uid = albumMatch[1];
+        currentUid = uid;
         getUserInfo(uid);
       } else {
-        showError('请先访问用户的相册页面 (如: weibo.com/u/用户ID?tabtype=album)');
+        showError('请先访问用户的主页 (如: weibo.com/u/用户ID)');
         disableAllButtons();
       }
     });
@@ -119,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Listen for progress updates from content.js
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === 'scroll_progress' && typeof message.count === 'number' && isFetching) {
+    if (message.action === 'fetch_progress' && typeof message.count === 'number' && isFetching) {
       fetchStatusSpan.textContent = `正在抓取所有原图链接（已找到第 ${message.count} 张，第 ${message.groupCount || 0} 个分组）...`;
     }
   });
@@ -140,14 +142,18 @@ document.addEventListener('DOMContentLoaded', function () {
     dateRangeErrorDiv.style.display = 'none';
     document.getElementById('reward-section').style.display = 'none';
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'auto_scroll_and_fetch' }, function (response) {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'fetch_album_images', uid: currentUid }, function (response) {
         fetchBtn.disabled = false;
         isFetching = false;
         imgLinksUl.innerHTML = '';
         if (response && response.groupedImages && response.groupedImages.length > 0) {
           groupedImages = response.groupedImages;
           const totalImages = groupedImages.reduce((sum, group) => sum + group.images.length, 0);
-          fetchStatusSpan.textContent = `已成功抓取到 ${totalImages} 张原图，共 ${groupedImages.length} 个分组。`;
+          if (response.partial) {
+            fetchStatusSpan.innerHTML = `已抓取到 ${totalImages} 张原图，共 ${groupedImages.length} 个分组。<span class="fetch-warning">⚠ 网络中断，数据可能不完整，可重新点击抓取。</span>`;
+          } else {
+            fetchStatusSpan.textContent = `已成功抓取到 ${totalImages} 张原图，共 ${groupedImages.length} 个分组。`;
+          }
 
           // Populate dropdowns with groups
           startGroupSelect.innerHTML = '';
