@@ -149,7 +149,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (response && response.groupedImages && response.groupedImages.length > 0) {
           groupedImages = response.groupedImages;
           const totalImages = groupedImages.reduce((sum, group) => sum + group.images.length, 0);
-          fetchStatusSpan.textContent = `已成功抓取到 ${totalImages} 张原图，共 ${groupedImages.length} 个分组。`;
+          if (response.partial) {
+            fetchStatusSpan.innerHTML = `已抓取到 ${totalImages} 张原图，共 ${groupedImages.length} 个分组。<span class="fetch-warning">⚠ 网络中断，数据可能不完整，可重新点击抓取。</span>`;
+          } else {
+            fetchStatusSpan.textContent = `已成功抓取到 ${totalImages} 张原图，共 ${groupedImages.length} 个分组。`;
+          }
 
           // Populate dropdowns with groups
           startGroupSelect.innerHTML = '';

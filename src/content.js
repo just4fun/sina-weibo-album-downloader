@@ -68,6 +68,19 @@ function pidToImageUrl(pid) {
   return `https://wx1.sinaimg.cn/large/${pid}`;
 }
 
+async function fetchPageWithRetry(url, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const resp = await fetch(url, { credentials: 'include' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      return await resp.json();
+    } catch (e) {
+      if (i === retries - 1) throw e;
+      await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+    }
+  }
+}
+
 // Fetch all album images via getImageWall API, grouped by year-month
 async function fetchAllImagesViaAPI(uid) {
   const groupData = {};   // "YYYY-MM" → { images: url[], liveVideos: { imageUrl: movUrl } }
@@ -76,13 +89,17 @@ async function fetchAllImagesViaAPI(uid) {
   let sinceid = '';
   let currentYear = new Date().getFullYear().toString();
   let currentMonth = '01';
+  let partial = false;
 
   while (true) {
     const params = `uid=${uid}&has_album=1${sinceid ? '&sinceid=' + encodeURIComponent(sinceid) : ''}`;
-    const resp = await fetch(`https://weibo.com/ajax/profile/getImageWall?${params}`, {
-      credentials: 'include'
-    });
-    const data = await resp.json();
+    let data;
+    try {
+      data = await fetchPageWithRetry(`https://weibo.com/ajax/profile/getImageWall?${params}`);
+    } catch (e) {
+      partial = true;
+      break;
+    }
 
     if (!data.ok || !data.data) break;
 
@@ -118,7 +135,7 @@ async function fetchAllImagesViaAPI(uid) {
     sinceid = nextSinceid;
   }
 
-  return groupOrder.reverse().map(key => {
+  const groups = groupOrder.reverse().map(key => {
     const [year, month] = key.split('-');
     return {
       year,
@@ -127,12 +144,13 @@ async function fetchAllImagesViaAPI(uid) {
       liveVideos: groupData[key].liveVideos
     };
   });
+  return { groups, partial };
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'fetch_album_images' && message.uid) {
-    fetchAllImagesViaAPI(message.uid).then(groupedImages => {
-      sendResponse({ groupedImages });
+    fetchAllImagesViaAPI(message.uid).then(({ groups, partial }) => {
+      sendResponse({ groupedImages: groups, partial });
     });
     return true;
   }
