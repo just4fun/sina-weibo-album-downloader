@@ -16,7 +16,7 @@ async function fetchImageAsBlob(url) {
 // Get user info from API (running in page context)
 async function getUserInfo(uid) {
   try {
-    const response = await fetch(`https://weibo.com/ajax/profile/info?uid=${uid}`, {
+    const response = await fetch(`/ajax/profile/info?uid=${uid}`, {
       credentials: 'include'
     });
 
@@ -95,7 +95,7 @@ async function fetchAllImagesViaAPI(uid) {
     const params = `uid=${uid}&has_album=1${sinceid ? '&sinceid=' + encodeURIComponent(sinceid) : ''}`;
     let data;
     try {
-      data = await fetchPageWithRetry(`https://weibo.com/ajax/profile/getImageWall?${params}`);
+      data = await fetchPageWithRetry(`/ajax/profile/getImageWall?${params}`);
     } catch (e) {
       partial = true;
       break;
