@@ -1,3 +1,7 @@
+chrome.sidePanel
+  .setPanelBehavior({ openPanelOnActionClick: true })
+  .catch(console.error);
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'download_blob' && message.blobUrl && message.filename) {
     chrome.downloads.download({

@@ -1,7 +1,7 @@
 # 新浪微博相册批量下载器（Chrome 扩展）
 
 <p align="center">
-  <img src="assets/logo.png" alt="Sina Weibo Album Downloader Icon">
+  <img src="assets/logo.png" alt="archive4fun">
 </p>
 
 [English README is available here (README.md)](./README.md)
@@ -26,8 +26,9 @@
 
 ## 使用方法
 
-1. **导航到微博用户的主页：**
+1. **导航到微博用户的主页并打开侧边栏：**
    - 前往你想要下载照片的微博用户主页（如 `weibo.com/u/用户ID`），无需特意切换到相册 tab。
+   - 点击工具栏中的扩展图标，打开侧边栏。
 
    <p align="center">
      <img src="assets/fetch_not_start.png" alt="Navigate to Weibo Profile Page" width="470" />
@@ -42,7 +43,7 @@
 
 3. **选择日期范围，点击"批量下载"按钮：**
    - 抓取完成后，图片会按年月分组。通过"从分组"和"到分组"两个下拉框选择你想下载的日期范围。
-   - 点击下载后即可关闭弹窗，图片会在浏览器后台持续下载，只要浏览器未关闭即可。
+   - 与旧版弹窗不同（旧版点击任何地方都会关闭），只要不主动关闭侧边栏，你可以随意切换 tab、在左侧页面继续做其他事情，下载会在后台持续进行。注意：关闭侧边栏后重新打开，抓取状态会重置，建议整个使用过程中保持侧边栏开启。
 
    <p align="center">
      <img src="assets/fetch_done.png" alt="Batch Download Ready" width="470" />
@@ -77,5 +78,5 @@
 ## 为什么不支持打包 ZIP 批量下载？
 
 - **浏览器限制：** Chrome 扩展无法可靠地创建和下载大体积 ZIP 文件，受限于内存和安全策略。
-- **弹窗生命周期：** 扩展弹窗在长时间操作时可能被 Chrome 关闭，导致 ZIP 创建中断。
+- **侧边栏限制：** 即便有持久的侧边栏，在浏览器中创建大体积 ZIP 仍不稳定——Chrome 可能因内存或安全限制，在操作完成前终止任务。
 - **CORS 与防盗链：** 后台脚本直接下载会被微博防盗链拦截，所有下载必须在页面上下文中发起。 

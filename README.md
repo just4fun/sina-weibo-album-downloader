@@ -1,7 +1,7 @@
 # Sina Weibo Album Downloader (Chrome Extension)
 
 <p align="center">
-  <img src="assets/logo.png" alt="Sina Weibo Album Downloader Icon">
+  <img src="assets/logo.png" alt="archive4fun">
 </p>
 
 [简体中文版 README 在此 (README.zh-CN.md)](./README.zh-CN.md)
@@ -26,8 +26,9 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
 
 ## How to Use
 
-1. **Navigate to the Weibo user's profile page:**
+1. **Navigate to the Weibo user's profile page and open the side panel:**
    - Go to any page of the Weibo user whose photos you want to download (e.g., `weibo.com/u/用户ID`). You do not need to navigate to the album tab specifically.
+   - Click the extension icon in the toolbar to open the side panel.
 
    <p align="center">
      <img src="assets/fetch_not_start.png" alt="Navigate to Weibo Profile Page" width="470" />
@@ -42,7 +43,7 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
 
 3. **Select a date range and click "批量下载" (Batch Download):**
    - After fetching, images are grouped by year and month. Use the "从分组" (From) and "到分组" (To) dropdowns to select the date range you want to download.
-   - You can now close the popup. The images will continue downloading in the background as long as your browser remains open.
+   - Unlike the old popup (which would close the moment you clicked anywhere else), the side panel stays open as long as you don't close it — you can freely switch tabs or continue browsing in the main window while downloads run in the background. Note: closing the side panel resets the UI state, so keep it open during your session.
 
    <p align="center">
      <img src="assets/fetch_done.png" alt="Batch Download Ready" width="500" />
@@ -77,5 +78,5 @@ This extension was created to help me back up nearly 4,000 photos I uploaded to 
 ## Why Not ZIP Batch Download?
 
 - **Browser Limitations:** Chrome extensions cannot reliably create and download large ZIP files due to memory and security restrictions.
-- **Popup Lifecycle:** The extension popup may be closed by Chrome during long operations, interrupting ZIP creation.
+- **Side Panel Lifecycle:** Even with the persistent side panel, ZIP creation in the browser is unreliable for large batches — Chrome may terminate the operation due to memory or security restrictions before it completes.
 - **CORS and Anti-Leeching:** Direct downloads from the background script are blocked by Weibo's anti-hotlinking, so all downloads must be initiated from the page context.
