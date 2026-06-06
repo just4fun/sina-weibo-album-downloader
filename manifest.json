@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "minimum_chrome_version": "114",
   "name": "archive4fun - 备份你的微博相册回忆",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "想备份你的微博相册与回忆吗？一键抓取全部相册原图，按年月自动分组批量下载，支持 GIF 动图与实况照片，无需任何编程知识。",
   "permissions": [
     "downloads",
