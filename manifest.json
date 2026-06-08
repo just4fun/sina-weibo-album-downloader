@@ -1,11 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "新浪微博相册原图批量下载器",
-  "version": "1.1.1",
-  "description": "抓取新浪微博相册图片原图链接并批量下载。",
+  "minimum_chrome_version": "114",
+  "name": "archive4fun - 备份你的微博相册回忆",
+  "version": "1.1.2",
+  "description": "想备份你的微博相册与回忆吗？一键抓取全部相册原图，按年月自动分组批量下载，支持 GIF 动图与实况照片，无需任何编程知识。",
   "permissions": [
     "downloads",
-    "activeTab"
+    "activeTab",
+    "sidePanel"
   ],
   "host_permissions": [
     "https://weibo.com/*",
@@ -14,8 +16,16 @@
   "background": {
     "service_worker": "src/background.js"
   },
+  "icons": {
+    "16": "assets/icon16.png",
+    "32": "assets/icon32.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  },
+  "side_panel": {
+    "default_path": "src/panel.html"
+  },
   "action": {
-    "default_popup": "src/popup.html",
     "default_icon": {
       "16": "assets/icon16.png",
       "32": "assets/icon32.png",
